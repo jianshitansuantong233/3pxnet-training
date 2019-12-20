@@ -65,7 +65,7 @@ def main():
     if args.size==1:    
         net = network.CNN_large(full=full, binary=binary, conv_thres=conv_sparsity, fc_thres=fc_sparsity, align=True, pad=pad)
     elif args.size==0:
-        net = network.CNN_big(full=full, binary=binary, conv_thres=conv_sparsity, fc_thres=fc_sparsity, align=True, pad=pad)
+        net = network.CNN_medium(full=full, binary=binary, conv_thres=conv_sparsity, fc_thres=fc_sparsity, align=True, pad=pad)
         
     save_file = save_dir + '{0}_s_{1}'.format(dataset, size)
 
@@ -91,7 +91,7 @@ def main():
     utils_own.adjust_pack(net,1)
     for epoch in range(0, 25):
         optimizer = adjust_optimizer(optimizer, epoch, regime)
-        train_loss, train_prec1, train_prec5 = utils_own.train(trainloader, net, criterion, epoch, optimizer, permute_mode=-1)
+        train_loss, train_prec1, train_prec5 = utils_own.train(trainloader, net, criterion, epoch, optimizer)
         val_loss, val_prec1, val_prec5 = utils_own.validate(testloader, net, criterion, epoch, verbal=True)
     
     # Retrain with permutation + packing constraint
@@ -100,7 +100,7 @@ def main():
 
     for epoch in range(0, 25):
         optimizer = adjust_optimizer(optimizer, epoch, regime)
-        train_loss, train_prec1, train_prec5 = utils_own.train(trainloader, net, criterion, epoch, optimizer, permute_mode=-1)
+        train_loss, train_prec1, train_prec5 = utils_own.train(trainloader, net, criterion, epoch, optimizer)
         val_loss, val_prec1, val_prec5 = utils_own.validate(testloader, net, criterion, epoch, verbal=True)
     
     # Fix pruned packs and fine tune
@@ -112,7 +112,7 @@ def main():
     
     for epoch in range(0, 200):
         optimizer = adjust_optimizer(optimizer, epoch, regime)
-        train_loss, train_prec1, train_prec5 = utils_own.train(trainloader, net, criterion, epoch, optimizer, permute_mode=-1)
+        train_loss, train_prec1, train_prec5 = utils_own.train(trainloader, net, criterion, epoch, optimizer)
         val_loss, val_prec1, val_prec5 = utils_own.validate(testloader, net, criterion, epoch, verbal=False)
         # remember best prec@1 and save checkpoint
         is_best = val_prec1 > best_prec1

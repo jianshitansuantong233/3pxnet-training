@@ -215,7 +215,7 @@ def permute_all_weights_once(model, pack=8, mode=1):
     '''
     # Only permute. Pruning is done using something else
     for mod in model.modules():
-        if isinstance(mod, binarized_modules.TernarizeLinear) or isinstance(mod, binarized_modules.TernarizeLinearAligned):
+        if isinstance(mod, binarized_modules.TernarizeLinear):
             logging.info('Permuting '+ str(mod))
             cur_pack = pack            
             permute_redund = mod.permute_list.size(0)
@@ -229,16 +229,16 @@ def permute_all_weights_once(model, pack=8, mode=1):
                     mod.permute_list[i] = perm_sort(mod.weight_org[i*section_size:ceiling])
                 elif mode==2:
                     mod.permute_list[i] = perm_rand(mod.weight.data[i*section_size:ceiling])
-        elif isinstance(mod, binarized_modules.TernarizeConv2d) or isinstance(mod, binarized_modules.TernarizeConv2dAligned):
+        elif isinstance(mod, binarized_modules.TernarizeConv2d):
             logging.info('Permuting '+ str(mod))
             weight_flat = mod.weight.data.permute(0,2,3,1).contiguous().view(-1,mod.weight.size(1)).contiguous()
             grad_flat = mod.weight.grad.permute(0,2,3,1).contiguous().view(-1,mod.weight.size(1)).contiguous()
             if mode==1:
-                mod.permute_list = one_time_permute(weight_flat, mod.thres, pack=pack, weight_grad_gpu = grad_flat)
+                mod.permute_list[0] = one_time_permute(weight_flat, mod.thres, pack=pack, weight_grad_gpu = grad_flat)
             elif mode==1:
-                mod.permute_list = perm_sort(weight_flat)
+                mod.permute_list[0] = perm_sort(weight_flat)
             elif mode==2:
-                mod.permute_list = perm_rand(weight_flat)
+                mod.permute_list[0] = perm_rand(weight_flat)
     
 def adjust_pack(net, pack):
     for mod in net.modules():
