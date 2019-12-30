@@ -148,10 +148,10 @@ def sim_n(tensor_group, tensor_new):
     '''
     height = tensor_group.size(0)
     width = tensor_group.size(1)+1
-    tensor_group_new = torch.zeros((height, width)).cuda(tensor_group.get_device())
+    tensor_group_new = torch.zeros((height, width)).to(tensor_group.device)
     tensor_group_new[:,:(width-1)] = tensor_group
     tensor_group_new[:,width-1] = tensor_new
-    empty = torch.sum((tensor_group_new==0), dim=1).type(torch.cuda.FloatTensor)
+    empty = torch.sum((tensor_group_new==0), dim=1).to(device=tensor_group.device, dtype=torch.float)
     compressed = torch.sum(tensor_group_new, dim=1)
     tensor_sum = -torch.sum(torch.min(empty, compressed))
     return tensor_sum
@@ -178,7 +178,7 @@ def one_time_permute(weight_gpu, thres, pack=8, weight_grad_gpu=None):
     while permute_size+pack < weight.size(1):
         permute_list_valid = permute_list[permute_size:]
 
-        result_tensor = torch.zeros((weight.size(0), pack)).cuda(weight_gpu.get_device())
+        result_tensor = torch.zeros((weight.size(0), pack)).to(weight_gpu.device)
         start_tensor = weight[:, permute_list_valid[0]]
         if type(weight_grad)!=type(None):
             start_gradient = grad_unprune[:, permute_list_valid[0]]
@@ -207,7 +207,7 @@ def one_time_permute(weight_gpu, thres, pack=8, weight_grad_gpu=None):
         permute_list = permute_list_finished + [item for item in permute_list if item not in permute_list_finished]
         permute_size += pack
         counter += 1
-    return torch.LongTensor(permute_list).cuda(weight_gpu.get_device())
+    return torch.LongTensor(permute_list).to(weight_gpu.device)
 
 def permute_all_weights_once(model, pack=8, mode=1):
     '''
