@@ -11,7 +11,6 @@ from utils import *
 import utils_own
 import network
 import onnx
-import onnxruntime
 import torch.optim as optim
 
 parser = argparse.ArgumentParser(description='PyTorch MNIST Training')
@@ -154,40 +153,13 @@ def main():
         x=Variable(torch.randn(1,784,requires_grad=True,device='cuda'))
         torch_out=net(x)
         torch.onnx.export(net,x,"training_data/FC_Small.onnx",verbose=True,opset_version=9,input_names = ['input'], output_names = ['output'])
-        ort_session = onnxruntime.InferenceSession("FC_Small.onnx")
-        def to_numpy(tensor):
-            return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
-        # compute ONNX Runtime output prediction
-        ort_inputs = {ort_session.get_inputs()[0].name: to_numpy(x)}
-        ort_outs = ort_session.run(None, ort_inputs)
-        # compare ONNX Runtime and PyTorch results
-        #np.testing.assert_allclose(to_numpy(torch_out), ort_outs[0], rtol=1e-03, atol=1e-05)
-        #print("Exported model has been tested with ONNXRuntime, and the result looks good!")
     elif size==1:
         x=Variable(torch.randn(1,784,requires_grad=True,device='cuda'))
         torch_out=net(x)
         torch.onnx.export(net,x,"training_data/FC_Large.onnx",export_params=True,verbose=True,input_names = ['input'], output_names = ['output'])
-        ort_session = onnxruntime.InferenceSession("FC_Large.onnx")
-        def to_numpy(tensor):
-            return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
-        # compute ONNX Runtime output prediction
-        ort_inputs = {ort_session.get_inputs()[0].name: to_numpy(x)}
-        ort_outs = ort_session.run(None, ort_inputs)
-        # compare ONNX Runtime and PyTorch results
-        #np.testing.assert_allclose(to_numpy(torch_out), ort_outs[0], rtol=1e-03, atol=1e-05)
-        #print("Exported model has been tested with ONNXRuntime, and the result looks good!")
     elif size==2:
         x=Variable(torch.randn(1,1,28,28,requires_grad=True,device='cuda'))
         torch.onnx.export(net,x,"training_data/CNN_Tiny.onnx",export_params=True,verbose=True,input_names = ['input'], output_names = ['output'])
-        ort_session = onnxruntime.InferenceSession("CNN_Tiny.onnx")
-        def to_numpy(tensor):
-            return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
-        # compute ONNX Runtime output prediction
-        ort_inputs = {ort_session.get_inputs()[0].name: to_numpy(x)}
-        ort_outs = ort_session.run(None, ort_inputs)
-        # compare ONNX Runtime and PyTorch results
-        #np.testing.assert_allclose(to_numpy(torch_out), ort_outs[0], rtol=1e-03, atol=1e-05)
-        #print("Exported model has been tested with ONNXRuntime, and the result looks good!")
 
         
 if __name__ == '__main__':
