@@ -33,7 +33,7 @@ class FC_small(nn.Module):
         self.htanh1 = nn.Hardtanh()
         self.bn1 = nn.BatchNorm1d(hid)
             
-        self.bn2 = nn.BatchNorm1d(10, affine=False)
+        self.bn2 = nn.BatchNorm1d(10, affine=True)
         self.logsoftmax=nn.LogSoftmax(dim=1)
     def forward(self, x):
         if self.full:
@@ -95,7 +95,7 @@ class FC_large(nn.Module):
         self.htanh3 = nn.Hardtanh()
         self.bn3 = nn.BatchNorm1d(hid)
             
-        self.bn4 = nn.BatchNorm1d(10, affine=False)
+        self.bn4 = nn.BatchNorm1d(10, affine=True)
         self.logsoftmax=nn.LogSoftmax(dim=1)
         
     def forward(self, x):
@@ -203,7 +203,7 @@ class CNN_medium(nn.Module):
         self.htanh6 = nn.Hardtanh(inplace=True)
         
         
-        self.bnfc1 = nn.BatchNorm1d(10, affine=False)
+        self.bnfc1 = nn.BatchNorm1d(10, affine=True)
         self.logsoftmax = nn.LogSoftmax(dim=1)
 
         self.regime = {
@@ -374,7 +374,7 @@ class CNN_large(nn.Module):
         self.htanhfc2 = nn.Hardtanh(inplace=True)
         
         
-        self.bnfc3 = nn.BatchNorm1d(10, affine=False)
+        self.bnfc3 = nn.BatchNorm1d(10, affine=True)
         self.logsoftmax = nn.LogSoftmax(dim=1)
 
         self.regime = {
@@ -519,7 +519,7 @@ class CNN_tiny(nn.Module):
         self.bn2 = nn.BatchNorm2d(32)
         self.htanh2 = nn.Hardtanh(inplace=True)
      
-        self.bnfc1 = nn.BatchNorm1d(10, affine=False)
+        self.bnfc1 = nn.BatchNorm1d(10, affine=True)
         self.logsoftmax = nn.LogSoftmax(dim=1)
 
     def forward(self, x):
