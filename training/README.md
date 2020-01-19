@@ -9,6 +9,7 @@ The code is based on https://github.com/itayhubara/BinaryNet.pytorch
 * Python 3.6, Numpy, pandas, bokeh
 * PyTorch 0.4.0 or newer
 * ONNX
+* ONNX runtime
 * NNEF-Tools (optional, will be installed by Makefile)
 
 ## MNIST
