@@ -5,11 +5,13 @@ import logging
 
 import numpy as np
 import torch.nn as nn
+from torch.autograd import Variable
 
 from utils import *
 import utils_own
 import network
-
+import onnx
+import onnxruntime
 import torch.optim as optim
 
 parser = argparse.ArgumentParser(description='PyTorch MNIST Training')
@@ -124,10 +126,9 @@ def main():
         # remember best prec@1 and save checkpoint
         is_best = val_prec1 > best_prec1
         best_prec1 = max(val_prec1, best_prec1)
-
         if is_best:
-            torch.save(net, save_file)
-            logging.info('\n Epoch: {0}\t'
+           torch.save(net, save_file)
+           logging.info('\n Epoch: {0}\t'
                          'Training Loss {train_loss:.4f} \t'
                          'Training Prec {train_prec1:.3f} \t'
                          'Validation Loss {val_loss:.4f} \t'
@@ -145,45 +146,49 @@ def main():
 
     upload_dir = save_dir
 
-    for mod in net.modules():
-        if isinstance(mod, nn.Conv2d):
-            print(mod)
-            weight = mod.weight.data.type(torch.int16).cpu().numpy()
-            conv_count += 1
-            np.save(upload_dir+'conv_{0}_weight'.format(conv_count), weight)
-        if isinstance(mod, nn.BatchNorm2d):
-            print(mod)
-            weight = mod.weight.data.cpu().numpy()
-            bias = mod.bias.data.cpu().numpy()
-            mean = mod.running_mean.cpu().numpy()
-            var = mod.running_var.cpu().numpy()
 
-            bn2d_count += 1
-            np.save(upload_dir+'bn2d_{0}_weight'.format(bn2d_count), weight)
-            np.save(upload_dir+'bn2d_{0}_bias'.format(bn2d_count), bias)
-            np.save(upload_dir+'bn2d_{0}_mean'.format(bn2d_count), mean)
-            np.save(upload_dir+'bn2d_{0}_var'.format(bn2d_count), var)
 
-        if isinstance(mod, nn.Linear):
-            print(mod)
-            weight = mod.weight.data.type(torch.int16).cpu().numpy()
-            fc_count += 1
-            np.save(upload_dir+'fc_{0}_weight'.format(fc_count), weight)
-        if isinstance(mod, nn.BatchNorm1d):
-            print(mod)
-            bn1d_count += 1
-            if type(mod.weight) != type(None):
-                weight = mod.weight.data.cpu().numpy()
-                np.save(upload_dir+'bn1d_{0}_weight'.format(bn1d_count), weight)
-            if type(mod.bias) != type(None):
-                bias = mod.bias.data.cpu().numpy()
-                np.save(upload_dir+'bn1d_{0}_bias'.format(bn1d_count), bias)
-            mean = mod.running_mean.cpu().numpy()
-            var = mod.running_var.cpu().numpy()
 
-            np.save(upload_dir+'bn1d_{0}_mean'.format(bn1d_count), mean)
-            np.save(upload_dir+'bn1d_{0}_var'.format(bn1d_count), var)
-    return 0
+    net.eval()
+    if size ==0:
+        x=Variable(torch.randn(1,784,requires_grad=True,device='cuda'))
+        torch_out=net(x)
+        torch.onnx.export(net,x,"training_data/FC_Small.onnx",verbose=True,opset_version=9,input_names = ['input'], output_names = ['output'])
+        ort_session = onnxruntime.InferenceSession("FC_Small.onnx")
+        def to_numpy(tensor):
+            return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
+        # compute ONNX Runtime output prediction
+        ort_inputs = {ort_session.get_inputs()[0].name: to_numpy(x)}
+        ort_outs = ort_session.run(None, ort_inputs)
+        # compare ONNX Runtime and PyTorch results
+        #np.testing.assert_allclose(to_numpy(torch_out), ort_outs[0], rtol=1e-03, atol=1e-05)
+        #print("Exported model has been tested with ONNXRuntime, and the result looks good!")
+    elif size==1:
+        x=Variable(torch.randn(1,784,requires_grad=True,device='cuda'))
+        torch_out=net(x)
+        torch.onnx.export(net,x,"training_data/FC_Large.onnx",export_params=True,verbose=True,input_names = ['input'], output_names = ['output'])
+        ort_session = onnxruntime.InferenceSession("FC_Large.onnx")
+        def to_numpy(tensor):
+            return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
+        # compute ONNX Runtime output prediction
+        ort_inputs = {ort_session.get_inputs()[0].name: to_numpy(x)}
+        ort_outs = ort_session.run(None, ort_inputs)
+        # compare ONNX Runtime and PyTorch results
+        #np.testing.assert_allclose(to_numpy(torch_out), ort_outs[0], rtol=1e-03, atol=1e-05)
+        #print("Exported model has been tested with ONNXRuntime, and the result looks good!")
+    elif size==2:
+        x=Variable(torch.randn(1,1,28,28,requires_grad=True,device='cuda'))
+        torch.onnx.export(net,x,"training_data/CNN_Tiny.onnx",export_params=True,verbose=True,input_names = ['input'], output_names = ['output'])
+        ort_session = onnxruntime.InferenceSession("CNN_Tiny.onnx")
+        def to_numpy(tensor):
+            return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
+        # compute ONNX Runtime output prediction
+        ort_inputs = {ort_session.get_inputs()[0].name: to_numpy(x)}
+        ort_outs = ort_session.run(None, ort_inputs)
+        # compare ONNX Runtime and PyTorch results
+        #np.testing.assert_allclose(to_numpy(torch_out), ort_outs[0], rtol=1e-03, atol=1e-05)
+        #print("Exported model has been tested with ONNXRuntime, and the result looks good!")
+
         
 if __name__ == '__main__':
     main()
