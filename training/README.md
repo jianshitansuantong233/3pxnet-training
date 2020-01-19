@@ -12,13 +12,13 @@ The code is based on https://github.com/itayhubara/BinaryNet.pytorch
 ## MNIST
 
 ```bash
-python main_mnist.py --size 1 --permute 1
+make prereq && make MNIST
 ```
 Trains a small pruned binarized MLP on MNIST with permutation
 
 ## CIFAR10 & SVHN
 
 ```bash
-python main_conv.py --size 1 --permute 1 --dataset CIFAR10
+make prereq && make CIFAR
 ```
 Trains a large pruned binarized CNN on CIFAR10 with permutation
