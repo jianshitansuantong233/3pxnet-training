@@ -11,6 +11,7 @@ from utils import *
 import utils_own
 import network
 import onnx
+import onnxruntime
 import torch.optim as optim
 
 parser = argparse.ArgumentParser(description='PyTorch MNIST Training')
@@ -151,16 +152,23 @@ def main():
     net.eval()
     if size ==0:
         x=Variable(torch.randn(1,784,requires_grad=True,device='cuda'))
-        torch_out=net(x)
         torch.onnx.export(net,x,"training_data/FC_Small.onnx",verbose=True,opset_version=9,input_names = ['input'], output_names = ['output'])
+        model=onnx.load("training_data/FC_Small.onnx")
+        # this can remove unecessary nodes
+        ort_session = onnxruntime.InferenceSession("training_data/FC_Large.onnx")
+        
     elif size==1:
         x=Variable(torch.randn(1,784,requires_grad=True,device='cuda'))
-        torch_out=net(x)
         torch.onnx.export(net,x,"training_data/FC_Large.onnx",export_params=True,verbose=True,input_names = ['input'], output_names = ['output'])
+        model=onnx.load("training_data/FC_Large.onnx")
+        # this can remove unecessary nodes
+        ort_session = onnxruntime.InferenceSession("training_data/FC_Large.onnx")
     elif size==2:
         x=Variable(torch.randn(1,1,28,28,requires_grad=True,device='cuda'))
         torch.onnx.export(net,x,"training_data/CNN_Tiny.onnx",export_params=True,verbose=True,input_names = ['input'], output_names = ['output'])
-
+        model=onnx.load("training_data/CNN_Small.onnx")
+        # this can remove unecessary nodes
+        ort_session = onnxruntime.InferenceSession("training_data/FC_Large.onnx")
         
 if __name__ == '__main__':
     main()

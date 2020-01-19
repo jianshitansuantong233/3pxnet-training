@@ -140,12 +140,16 @@ def main():
 
     if args.size==1:
         x=Variable(torch.randn(1,3,32,32,requires_grad=True,device='cuda'))
-        torch_out=net(x)
         torch.onnx.export(net,x,"training_data/CNN_Large.onnx",verbose=True,opset_version=9,input_names = ['input'], output_names = ['output'])
+        model=onnx.load("training_data/CNN_Large.onnx")
+        # this can remove unecessary nodes
+        ort_session = onnxruntime.InferenceSession("training_data/CNN_Large.onnx")
     elif args.size==0:
         x=Variable(torch.randn(1,3,32,32,requires_grad=True,device='cuda'))
-        torch_out=net(x)
         torch.onnx.export(net,x,"training_data/CNN_Medium.onnx",verbose=True,opset_version=9,input_names = ['input'], output_names = ['output'])
+        model=onnx.load("training_data/CNN_Medium.onnx")
+        # this can remove unecessary nodes
+        ort_session = onnxruntime.InferenceSession("training_data/CNN_Medium.onnx")
 
 if __name__ == '__main__':
     main()
